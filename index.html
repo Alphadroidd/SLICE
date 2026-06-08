@@ -13,12 +13,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <!-- Google Analytics 4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9RCCEHT8Q9"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2XYC28JRSP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-9RCCEHT8Q9');
+  gtag('config', 'G-2XYC28JRSP');
 </script>
 <!-- Cloudflare Web Analytics -->
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2dcdd8be3a744521894131741d2becef"}'></script>
@@ -515,11 +515,105 @@
 </div>
 
 <script>
-  // Rastreamento de cliques
+  // ─── GA4 TRACKING COMPLETO ───────────────────────────────────────────────
+
+  // 1. Cliques nos botões WhatsApp
   function trackClick(nome) {
-    if (window.gtag) gtag('event', 'whatsapp_click', { group_name: nome, page: 'slice-tenis' });
+    if (window.gtag) {
+      gtag('event', 'whatsapp_click', {
+        event_category: 'CTA',
+        event_label: nome,
+        group_name: nome,
+        page: 'slice-tenis'
+      });
+    }
     if (window.zaraz) zaraz.track('whatsapp_click', { grupo: nome });
   }
+
+  // 2. Scroll Depth — dispara em 25%, 50%, 75%, 90%
+  (function() {
+    const milestones = [25, 50, 75, 90];
+    const fired = new Set();
+    function onScroll() {
+      const scrolled = window.scrollY;
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = Math.round((scrolled / total) * 100);
+      milestones.forEach(m => {
+        if (pct >= m && !fired.has(m)) {
+          fired.add(m);
+          if (window.gtag) gtag('event', 'scroll_depth', {
+            event_category: 'Engajamento',
+            event_label: m + '%',
+            value: m
+          });
+        }
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+
+  // 3. Tempo na Página — dispara em 15s, 30s, 60s, 120s
+  (function() {
+    const tempos = [15, 30, 60, 120];
+    tempos.forEach(t => {
+      setTimeout(() => {
+        if (window.gtag) gtag('event', 'time_on_page', {
+          event_category: 'Engajamento',
+          event_label: t + 's',
+          value: t
+        });
+      }, t * 1000);
+    });
+  })();
+
+  // 4. Visibilidade do botão principal (Intersection Observer)
+  (function() {
+    const btn = document.getElementById('btn-principal');
+    if (!btn || !window.IntersectionObserver) return;
+    let visto = false;
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !visto) {
+        visto = true;
+        if (window.gtag) gtag('event', 'cta_visible', {
+          event_category: 'Engajamento',
+          event_label: 'Botão Hero visível'
+        });
+      }
+    }, { threshold: 0.5 });
+    obs.observe(btn);
+  })();
+
+  // 5. Saída da página (Page Exit Intent)
+  (function() {
+    let disparado = false;
+    document.addEventListener('mouseleave', e => {
+      if (e.clientY <= 0 && !disparado) {
+        disparado = true;
+        if (window.gtag) gtag('event', 'exit_intent', {
+          event_category: 'Engajamento',
+          event_label: 'Mouse saiu pelo topo'
+        });
+      }
+    });
+  })();
+
+  // 6. Origem do tráfego — lê UTM da URL e registra
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const utm = {
+      source: params.get('utm_source'),
+      medium: params.get('utm_medium'),
+      campaign: params.get('utm_campaign')
+    };
+    if (utm.source && window.gtag) {
+      gtag('event', 'utm_visit', {
+        event_category: 'Tráfego',
+        utm_source: utm.source,
+        utm_medium: utm.medium || '(none)',
+        utm_campaign: utm.campaign || '(none)'
+      });
+    }
+  })();
 
   // Partículas
   (function() {
